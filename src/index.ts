@@ -18,7 +18,7 @@ app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-app.use("/api", expenseRouter);
+app.use("/api/expenses", expenseRouter);
 
 // Start server
 app.listen(PORT, () => {

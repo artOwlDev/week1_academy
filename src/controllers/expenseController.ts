@@ -1,8 +1,21 @@
 import { Request, Response } from "express";
 import { ExpenseService } from "../services/expenseService";
+import { CreateExpenseRequestDto, ExpenseResponseDto } from "../dtos/expenseDto"
+
 
 export class ExpenseController {
-    constructor(private service: ExpenseService = new ExpenseService()) {}
+    constructor(
+        private service: ExpenseService = new ExpenseService()) 
+    {} 
+
+    private toResponseDto(expense: any): ExpenseResponseDto {
+        return {
+            id: expense.id,
+            date: expense.date,
+            description: expense.description,
+            user: expense.user
+        };
+    }
 
     async getById(req: Request, res: Response): Promise<any> {
         const id = Number(req.params.id);
@@ -19,59 +32,74 @@ export class ExpenseController {
             return;
         }
 
-        res.status(200).json(expense);
+        res.status(200).json(this.toResponseDto(expense));
 
     }
 
-    async getAll(req: Request, res: Response):  Promise<any>{
-        res.status(200).json(this.service.findAll())
+    async getAll(req: Request, res: Response): Promise<any> {
+        const expenses = await this.service.findAll();
+        const dtoList: ExpenseResponseDto[] = expenses.map(expense => this.toResponseDto(expense));
+        res.status(200).json(dtoList);
     } 
 
-    async create(req: Request, res: Response): Promise<any>{
-        const date = req.body.date
-        const description = req.body.description
-        const user = req.body.user
+    async create(req: Request, res: Response): Promise<any> {
+        const body: CreateExpenseRequestDto = req.body;
+        const date = body.date;
+        const description = body.description;
+        const user = body.user;
 
-        if (!date){
+        if (!date) {
             res.status(400).json({ error: "Invalid date" });
+            return;
         }
-        if (!description){
+        if (!description) {
             res.status(400).json({ error: "Invalid description" });
+            return;
         }
-        if (!user){
+        if (!user) {
             res.status(400).json({ error: "Invalid user" });
+            return;
         }
 
-        this.service.create({date, description, user})
-
-        return {date, description, user}
+        const expense = await this.service.create({ date, description, user });
+        res.status(201).json(this.toResponseDto(expense));
     }
 
-    async update(req: Request, res: Response): Promise<any>{
-        const id = req.body.id
-       
-        if (!id){
-            res.status(400).json({ error: "Invalid id" });
+    async update(req: Request, res: Response): Promise<any> {
+        const id = Number(req.params.id);
+
+        if (isNaN(id)) {
+            res.status(400).json({ error: "ID must be a number" });
+            return;
         }
 
-        res.status(200).json(this.service.update(id, ""))
+        const updatedExpense = await this.service.update(id, req.body);
 
-    }
-
-    async delete(req: Request, res: Response): Promise<any>{
-        const id = req.body.id
-       
-        if (!id){
-            res.status(400).json({ error: "Invalid id" });
+        if (!updatedExpense) {
+            res.status(404).json({ error: "Expense not found" });
+            return;
         }
 
-        res.status(200).json(this.service.delete(id))
+        res.status(200).json(this.toResponseDto(updatedExpense));
     }
 
+    async delete(req: Request, res: Response): Promise<any> {
+        const id = Number(req.params.id);
 
+        if (isNaN(id)) {
+            res.status(400).json({ error: "ID must be a number" });
+            return;
+        }
 
+        const deleted = await this.service.delete(id);
 
+        if (!deleted) {
+            res.status(404).json({ error: "Expense not found" });
+            return;
+        }
 
+        res.status(204).send();
+    }
 
 }
 

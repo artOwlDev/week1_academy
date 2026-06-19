@@ -1,70 +1,61 @@
-const mockExpenses: any[] = [
-    { id: 1, title: "Getting Started", content: "TypeScript basics .", author: "Alice" },
-    { id: 2, title: "Advanced Patterns", content: "Generics explained .", author: "Bob" },
+import { Expense } from "../models/expense";
+
+
+const mockExpenses: Expense[] = [
+    { id: 1, date: "2024-01-15", description: "Grocery shopping", user: "Alice" },
+    { id: 2, date: "2024-01-16", description: "Gas refill", user: "Bob" },
 ];
 
 export class ExpenseService{
-    async findById(id: number): Promise<any> {
-        return mockExpenses.find(p => p.id = id);
+    async findById(id: number): Promise<Expense | undefined> {
+        return mockExpenses.find(p => p.id === id);
     }
 
-    async findAll(): Promise<any[]> {
+    async findAll(): Promise<Expense[]> {
         return mockExpenses;
     }
 
-    async create(expense: any): Promise<any> {
-
-        if (!expense){
-            return
+    async create(expense: any): Promise<Expense |undefined> {
+        if (!expense) {
+            return;
         }
 
         const newExpense = {
             id: mockExpenses.length + 1,
-            title: expense.title,
-            content: expense.content,
-            author: expense.author
-        }
+            date: expense.date,
+            description: expense.description,
+            user: expense.user
+        };
 
-        mockExpenses.push(newExpense)
-
-        return newExpense
+        mockExpenses.push(newExpense);
+        return newExpense;
     }
 
-    async update(id: number, expense: any): Promise<any> {
+    async update(id: number, expense: any): Promise<Expense | undefined> {
+        const index = mockExpenses.findIndex(e => e.id === id);
 
-        var updateExpense = null;
-
-        for (const i of mockExpenses) {
-            if (i.id == id){
-                updateExpense = i.id
-                mockExpenses[i].title = expense.title,
-                mockExpenses[i].content = expense.content,
-                mockExpenses[i].author = expense.author
-            }
+        if (index === -1) {
+            return undefined;
         }
 
-        if (!updateExpense) {
-            return undefined
-        }
-        
+        mockExpenses[index] = {
+            id: mockExpenses[index].id,
+            date: expense.date || mockExpenses[index].date,
+            description: expense.description || mockExpenses[index].description,
+            user: expense.user || mockExpenses[index].user
+        };
+
+        return mockExpenses[index];
     }
 
-    async delete(id: number) : Promise<boolean> {
-        var removeExpense = null;
+    async delete(id: number): Promise<boolean> {
+        const index = mockExpenses.findIndex(e => e.id === id);
 
-        for (const i of mockExpenses) {
-            if (i.id == id){
-                removeExpense = i.id
-                mockExpenses.splice(id, 1); // Remove the id of the 'found' element.
-            }
+        if (index === -1) {
+            return false;
         }
 
-        if (!removeExpense){
-            return false
-        }
-        
-        return true
-
-
+        mockExpenses.splice(index, 1);
+        return true;
     }
 }
